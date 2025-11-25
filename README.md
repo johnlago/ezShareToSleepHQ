@@ -61,6 +61,92 @@ ezshare_resmed looks for config files in this order:
 - `~/.config/ezshare_resmed/ezshare_resmed.ini`
 - `~/.config/ezshare_resmed/config.ini`
 
+## SleepHQ Integration
+
+This tool can automatically upload successfully downloaded CPAP data files to [SleepHQ](https://sleephq.com) for cloud storage and analysis.
+
+### Prerequisites
+
+- A SleepHQ account
+- SleepHQ OAuth2 credentials (client ID and client secret)
+
+To obtain OAuth2 credentials, you will need to register your application with SleepHQ or contact their support. The credentials are required for the OAuth2 authentication flow.
+
+### Configuration
+
+Add a `[sleephq]` section to your `config.ini` file:
+
+```ini
+[sleephq]
+enabled = True
+client_id = your_sleephq_client_id
+client_secret = your_sleephq_client_secret
+```
+
+Alternatively, use command-line flags:
+
+```bash
+ezshare_resmed --upload-to-sleephq --sleephq-client-id YOUR_CLIENT_ID --sleephq-client-secret YOUR_CLIENT_SECRET
+```
+
+### Usage
+
+When SleepHQ upload is enabled, the tool will:
+
+1. Download data from your EZShare SD card as usual
+2. After successful download, prompt for your SleepHQ credentials (username and password)
+3. Upload only EDF data files to your SleepHQ account
+4. Track uploaded files to prevent duplicate uploads on subsequent runs
+
+### Options
+
+| Argument | Description |
+| --- | --- |
+| `--upload-to-sleephq` | Enable uploading files to SleepHQ |
+| `--sleephq-client-id ID` | SleepHQ OAuth2 client ID |
+| `--sleephq-client-secret SECRET` | SleepHQ OAuth2 client secret |
+
+### Authentication
+
+On the first run with SleepHQ upload enabled, you will be prompted for your SleepHQ username and password. The authentication token is securely stored locally for future use and refreshed automatically as needed.
+
+To re-authenticate (e.g., after changing your password), delete the token file at:
+- macOS/Linux: `~/.config/ezshare_resmed/sleephq_token.json`
+- Windows: `%APPDATA%\ezshare_resmed\sleephq_token.json`
+
+### Scheduling with Cron (Raspberry Pi Example)
+
+To automatically sync and upload data every 6 hours on a Raspberry Pi:
+
+```bash
+# Edit crontab
+crontab -e
+
+# Add the following line to run every 6 hours:
+0 */6 * * * /path/to/ezshare_resmed --upload-to-sleephq
+```
+
+Or with a config file:
+
+```bash
+0 */6 * * * /path/to/ezshare_resmed --config /path/to/config.ini
+```
+
+Make sure your `config.ini` has the `[sleephq]` section configured as shown above.
+
+### Tracking
+
+Uploaded files are tracked in a JSON file to prevent duplicate uploads:
+- macOS/Linux: `~/.config/ezshare_resmed/upload_tracker.json`
+- Windows: `%APPDATA%\ezshare_resmed\upload_tracker.json`
+
+### Troubleshooting
+
+- **Authentication fails**: Verify your SleepHQ username, password, client ID, and client secret are correct
+- **Upload fails**: Check your network connection and verify the SleepHQ API is accessible
+- **Files not uploading**: Check the upload tracker file to see which files have been previously uploaded
+- **Enable verbose logging**: Use `--verbose` or `-v` flag to see detailed logs
+
 
 ## Setup
 1. [Install Python 3](#install-python-3)

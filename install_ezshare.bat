@@ -20,6 +20,8 @@ mkdir %USERPROFILE%\.local\bin
 mkdir %USERPROFILE%\.config\ezshare_resmed
 copy ezshare_resmed.cmd %USERPROFILE%\.local\bin
 copy ezshare_resmed.py %USERPROFILE%\.local\bin
+copy sleephq_client.py %USERPROFILE%\.local\bin
+copy upload_tracker.py %USERPROFILE%\.local\bin
 IF NOT EXIST "%USERPROFILE%\.config\ezshare_resmed\config.ini" (
     copy ezshare_resmed_default.ini %USERPROFILE%\.config\ezshare_resmed\config.ini
 )

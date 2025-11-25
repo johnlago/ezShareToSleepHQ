@@ -14,12 +14,16 @@ import logging
 import textwrap
 import shutil
 import tempfile
+import getpass
 
 import bs4
 import requests
 from requests import adapters
 import tqdm
 from urllib3.util import retry
+
+from sleephq_client import SleepHQClient
+from upload_tracker import UploadTracker
 
 
 APP_NAME = pathlib.Path(__file__).stem
@@ -110,6 +114,7 @@ class EZShare():
         self.retry = retry.Retry(total=retries, backoff_factor=0.25)
         self.connection_delay = connection_delay
         self.session.mount('http://', adapters.HTTPAdapter(max_retries=self.retry))
+        self.downloaded_files = []
 
     @property
     def wifi_profile(self):
@@ -564,6 +569,8 @@ class EZShare():
                 logger.info('%s written', str(file_path))
             if file_ts:
                 os.utime(file_path, (file_ts, file_ts))
+            # Track the downloaded file for potential SleepHQ upload
+            self.downloaded_files.append(str(file_path))
             return
         else:
             logger.info('File %s already exists and has not been updated. Skipping because overwrite is off.',
@@ -643,7 +650,10 @@ class EZShare():
                     logger.info('Successfully removed network profile for %s',
                                 self.connection_id)
                 except subprocess.CalledProcessError as e:
-                    raise RuntimeError(f'Error removing network profile for {self.ssid}. Return code: {e.returncode}, error: {e.stderr}') from e
+                    # Profile deletion may fail due to insufficient privileges
+                    # This is non-fatal - the important thing is we disconnected
+                    logger.warning('Could not remove network profile for %s (may require sudo): %s',
+                                   self.connection_id, e.stderr.strip() if e.stderr else f'exit code {e.returncode}')
 
         elif self.platform_system == 'Windows':
             if self.connection_id:
@@ -666,6 +676,68 @@ class EZShare():
                                 self.existing_connection_id)
                 except subprocess.CalledProcessError as e:
                     raise RuntimeError(f'Error reconnecting to original network profile: {self.existing_connection_id}. Return code: {e.returncode}, error: {e.stderr}') from e
+
+
+def upload_to_sleephq(ezshare, sleephq_client, verbose, force=False):
+    """
+    Uploads the entire SD card mirror directory to SleepHQ.
+
+    SleepHQ expects the complete SD card contents for each import and will
+    deduplicate the data during processing.
+
+    Args:
+        ezshare (EZShare): The EZShare object.
+        sleephq_client (SleepHQClient): The SleepHQ client object.
+        verbose (bool): If verbose output should be shown.
+        force (bool): If True, upload even if no new files were downloaded.
+    """
+    # Only upload if new files were downloaded (unless force is set)
+    if not force and not ezshare.downloaded_files:
+        logger.info("No files downloaded in this sync, skipping SleepHQ upload")
+        return
+    
+    # Authenticate if not already authenticated
+    if not sleephq_client.is_authenticated():
+        # Prompt for credentials
+        print("\nSleepHQ authentication required")
+        username = input("SleepHQ username/email: ").strip()
+        password = getpass.getpass("SleepHQ password: ")
+        
+        if not sleephq_client.authenticate(username, password):
+            logger.error("Failed to authenticate with SleepHQ")
+            return
+    
+    # Collect ALL files from the SD card mirror directory
+    # SleepHQ will deduplicate during processing
+    # Skip only known system files that shouldn't be uploaded
+    SKIP_FILES = {'JOURNAL.JNL', '.DS_Store', 'Thumbs.db'}
+    
+    files_to_upload = []
+    for file_path in ezshare.path.rglob('*'):
+        if not file_path.is_file():
+            continue
+        # Skip known system files
+        if file_path.name in SKIP_FILES:
+            continue
+        # Skip hidden files (starting with .)
+        if file_path.name.startswith('.'):
+            continue
+        files_to_upload.append(file_path)
+    
+    if not files_to_upload:
+        logger.info("No data files found in SD card directory")
+        return
+    
+    # Upload files
+    logger.info(f"Found {len(files_to_upload)} file(s) in {ezshare.path} to upload to SleepHQ")
+    logger.debug(f"Files to upload: {[str(f) for f in files_to_upload[:10]]}{'...' if len(files_to_upload) > 10 else ''}")
+    successful, failed = sleephq_client.upload_files(
+        files_to_upload,
+        base_path=ezshare.path,
+        overwrite=force,
+    )
+    
+    logger.info(f"SleepHQ upload complete: {successful} successful, {failed} failed")
 
 
 def main():
@@ -712,6 +784,11 @@ def main():
     psk = config.get(f'{APP_NAME}', 'psk', fallback=None)
     retries = config.getint(f'{APP_NAME}', 'retries', fallback=5)
 
+    # SleepHQ configuration
+    sleephq_enabled = config.getboolean('sleephq', 'enabled', fallback=False)
+    sleephq_client_id = config.get('sleephq', 'client_id', fallback=None)
+    sleephq_client_secret = config.get('sleephq', 'client_secret', fallback=None)
+
     # Parse command line arguments
     description = textwrap.dedent(f"""\
     {APP_NAME} wirelessly syncs Resmed CPAP/BiPAP treatment data logs stored on a EZShare WiFi SD card wirelessly to your local device
@@ -754,6 +831,14 @@ def main():
                         help='set network pass phrase, defaults to None')
     parser.add_argument('--retries', type=int,
                         help=f'set number of retries for failed downloads, defaults to {retries}')
+    parser.add_argument('--upload-to-sleephq', action='store_true',
+                        help='upload successfully downloaded files to SleepHQ, defaults to False')
+    parser.add_argument('--sleephq-client-id', type=str,
+                        help='SleepHQ OAuth2 client ID')
+    parser.add_argument('--sleephq-client-secret', type=str,
+                        help='SleepHQ OAuth2 client secret')
+    parser.add_argument('--force-sleephq-upload', action='store_true',
+                        help='force re-upload of all files to SleepHQ, bypassing upload tracker')
     parser.add_argument('--version', action='version',
                         version=f'{APP_NAME} {VERSION}')
     args = parser.parse_args()
@@ -782,6 +867,12 @@ def main():
         psk = args.psk
     if args.retries:
         retries = args.retries
+    if args.upload_to_sleephq:
+        sleephq_enabled = True
+    if args.sleephq_client_id:
+        sleephq_client_id = args.sleephq_client_id
+    if args.sleephq_client_secret:
+        sleephq_client_secret = args.sleephq_client_secret
 
     ignore_list = ignore.split(',')
 
@@ -799,12 +890,27 @@ def main():
                       keep_old, ssid, psk, ignore_list, retries,
                       CONNECTION_DELAY, args.debug)
 
+    # Initialize SleepHQ client if upload is enabled
+    sleephq_client = None
+    if sleephq_enabled:
+        if not sleephq_client_id or not sleephq_client_secret:
+            logger.error('SleepHQ upload enabled but client_id or client_secret not provided')
+            sleephq_enabled = False
+        else:
+            sleephq_client = SleepHQClient(sleephq_client_id, sleephq_client_secret, verbose=verbose)
+
     try:
         ezshare.run()
     except BaseException as e:
         raise e
     finally:
         ezshare.disconnect_from_wifi()
+    
+    # Upload files to SleepHQ if enabled (must happen after disconnecting from
+    # ez Share wifi, since that network has no internet access)
+    if sleephq_enabled and sleephq_client:
+        upload_to_sleephq(ezshare, sleephq_client, verbose, force=args.force_sleephq_upload)
+    
     ezshare.print('Complete')
 
 
