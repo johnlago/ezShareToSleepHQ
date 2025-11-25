@@ -33,22 +33,58 @@ def upload_to_sleephq(ezshare, sleephq_client, verbose, force=False):
             logger.error("Failed to authenticate with SleepHQ")
             return
     
-    # Collect ALL files from the SD card mirror directory
-    # SleepHQ will deduplicate during processing
-    # Skip only known system files that shouldn't be uploaded
-    SKIP_FILES = {'JOURNAL.JNL', '.DS_Store', 'Thumbs.db'}
+    # Collect files to upload based on incremental strategy
+    # 1. Mandatory files (STR.edf, Identification.crc, Identification.json)
+    # 2. SETTINGS/ folder contents
+    # 3. DATALOG/ subfolders that have new data (or all if force=True)
     
     files_to_upload = []
-    for file_path in ezshare.path.rglob('*'):
-        if not file_path.is_file():
-            continue
-        # Skip known system files
-        if file_path.name in SKIP_FILES:
-            continue
-        # Skip hidden files (starting with .)
-        if file_path.name.startswith('.'):
-            continue
-        files_to_upload.append(file_path)
+    added_paths = set()
+
+    def add_file(path):
+        if path.is_file() and not path.name.startswith('.') and path not in added_paths:
+            files_to_upload.append(path)
+            added_paths.add(path)
+
+    # 1. Mandatory Root Files
+    MANDATORY_FILES = {'STR.edf', 'Identification.crc', 'Identification.json'}
+    for filename in MANDATORY_FILES:
+        f = ezshare.path / filename
+        if f.exists():
+            add_file(f)
+
+    # 2. SETTINGS folder
+    settings_dir = ezshare.path / 'SETTINGS'
+    if settings_dir.exists():
+        for f in settings_dir.rglob('*'):
+            add_file(f)
+
+    # 3. DATALOG folders
+    # Identify "active" DATALOG folders from downloaded_files
+    active_datalog_folders = set()
+    if not force:
+        for downloaded_file in ezshare.downloaded_files:
+            path = pathlib.Path(downloaded_file)
+            try:
+                # Check if file is inside a DATALOG subfolder
+                rel_path = path.relative_to(ezshare.path)
+                parts = rel_path.parts
+                if len(parts) >= 3 and parts[0] == 'DATALOG':
+                    # parts[0] is DATALOG, parts[1] is the date folder
+                    active_datalog_folders.add(parts[1])
+            except ValueError:
+                continue
+    
+    datalog_dir = ezshare.path / 'DATALOG'
+    if datalog_dir.exists():
+        for date_folder in datalog_dir.iterdir():
+            if not date_folder.is_dir():
+                continue
+            
+            # Include if force=True or if it's an active folder
+            if force or date_folder.name in active_datalog_folders:
+                for f in date_folder.rglob('*'):
+                    add_file(f)
     
     if not files_to_upload:
         logger.info("No data files found in SD card directory")
