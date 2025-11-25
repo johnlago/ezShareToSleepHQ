@@ -8,7 +8,7 @@ def upload_to_sleephq(ezshare, sleephq_client, verbose, force=False):
     """
     Uploads the entire SD card mirror directory to SleepHQ.
 
-    SleepHQ expects the complete SD card contents for each import and will
+    SleepHQ expects the complete SD card structure for each import and will
     deduplicate the data during processing.
 
     Args:
