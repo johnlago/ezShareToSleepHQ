@@ -55,6 +55,7 @@ cp ezshare_resmed $HOME/.local/bin
 cp ezshare_resmed.py $HOME/.local/bin
 cp sleephq_client.py $HOME/.local/bin
 cp upload_tracker.py $HOME/.local/bin
+cp sleephq_uploader.py $HOME/.local/bin
 if ! [ -f "$HOME/.config/ezshare_resmed/config.ini" ]; then
     cp ezshare_resmed_default.ini $HOME/.config/ezshare_resmed/config.ini
 fi
