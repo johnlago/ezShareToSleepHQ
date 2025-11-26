@@ -38,7 +38,7 @@ def upload_to_sleephq(ezshare, sleephq_client, verbose, force=False, username=No
             password = getpass.getpass("SleepHQ password: ")
             
             if not sleephq_client.authenticate(username, password):
-                logger.error("Failed to authenticate with SleepHQ")
+                logger.error("❌ Failed to authenticate with SleepHQ")
                 return
     
     # Collect files to upload based on incremental strategy
@@ -107,4 +107,4 @@ def upload_to_sleephq(ezshare, sleephq_client, verbose, force=False, username=No
         overwrite=force,
     )
     
-    logger.info(f"SleepHQ upload complete: {successful} successful, {failed} failed")
+    logger.info(f"✅ SleepHQ upload complete: {successful} successful, {failed} failed")

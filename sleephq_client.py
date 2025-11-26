@@ -148,7 +148,7 @@ class SleepHQClient:
             # OAuth2 password grant doesn't provide refresh tokens, so we calculate expiry
             self.token_expiry = time.time() + token_data.get('expires_in', 7200)
             
-            logger.info("Successfully authenticated with SleepHQ API")
+            logger.info("✅ Successfully authenticated with SleepHQ API")
             
             # Retrieve team ID
             if not self._get_team_id():
@@ -263,7 +263,7 @@ class SleepHQClient:
                 import_id = None
             
             if import_id:
-                logger.info(f"Created new import with ID: {import_id}")
+                logger.info(f"✅ Created new import with ID: {import_id}")
                 return str(import_id)
             else:
                 logger.warning(f"Created import but no ID in response: {response_data}")
@@ -421,7 +421,7 @@ class SleepHQClient:
             )
             response.raise_for_status()
             
-            logger.info(f"Successfully triggered processing for import ID: {import_id}")
+            logger.info(f"✅ Successfully triggered processing for import ID: {import_id}")
             return True
             
         except requests.exceptions.HTTPError as e:
@@ -476,11 +476,11 @@ class SleepHQClient:
         for file_path in file_paths:
             if self.add_file_to_import(import_id, file_path, base_path=base_path):
                 successful += 1
-                logger.info(f"Added file to import: {file_path.name}")
+                logger.info(f"✅ Added file to import: {file_path.name}")
             else:
                 failed += 1
         
-        logger.info(f"Upload complete: {successful} successful, {failed} failed (import ID: {import_id})")
+        logger.info(f"✅ Upload complete: {successful} successful, {failed} failed (import ID: {import_id})")
         
         # Step 3: Process the import (even if some files failed, process what we have)
         if process and successful > 0:

@@ -209,7 +209,7 @@ class EZShare():
         else:
             raise RuntimeError('Automatic Wi-Fi connection is not supported on this system.')
 
-        self.print(f'Connected to {self.ssid} successfully.')
+        self.print(f'✅ Connected to {self.ssid} successfully.')
 
     def connect_to_wifi_macos(self):
         """
@@ -406,11 +406,14 @@ class EZShare():
             SystemExit: When the path does not exist and create_missing is False
         """
         if self.ssid:
+            logger.info("================================================================================")
+            logger.info(f"🚀 Starting EZShare Sync at {datetime.datetime.now()}")
+            logger.info("================================================================================")
             self.print(f'Connecting to {self.ssid}.')
             try:
                 self.connect_to_wifi()
             except RuntimeError as e:
-                logger.warning('Failed to connect to %s. Error: %s', self.ssid, str(e))
+                logger.warning('❌ Failed to connect to %s. Error: %s', self.ssid, str(e))
             else:
                 self.print('Waiting a few seconds for connection to establish...')
                 time.sleep(self.connection_delay)
@@ -421,7 +424,7 @@ class EZShare():
                 if response.lower() != 'c':
                     sys.exit('Cancled')
             else:
-                logger.warning('No Wi-Fi connection was estableshed. Attempting to continue...')
+                logger.warning('⚠️ No Wi-Fi connection was estableshed. Attempting to continue...')
 
         try:
             self.path.mkdir(parents=True, exist_ok=True)
@@ -563,11 +566,11 @@ class EZShare():
                         fp.write(data)
             if already_exists:
                 if mtime < file_ts:
-                    logger.info('file at %s is newer than %s, overwritten', url, str(file_path))
+                    logger.info('✅ file at %s is newer than %s, overwritten', url, str(file_path))
                 else:
-                    logger.info('%s overwritten', str(file_path))
+                    logger.info('✅ %s overwritten', str(file_path))
             else:
-                logger.info('%s written', str(file_path))
+                logger.info('✅ %s written', str(file_path))
             if file_ts:
                 os.utime(file_path, (file_ts, file_ts))
             # Track the downloaded file for potential SleepHQ upload
@@ -639,7 +642,7 @@ class EZShare():
                 try:
                     subprocess.run(disconnect_cmd, shell=True,
                                    capture_output=True, text=True, check=True)
-                    logger.info('Successfully disconnected from %s', self.ssid)
+                    logger.info('✅ Successfully disconnected from %s', self.ssid)
                 except subprocess.CalledProcessError as e:
                     raise RuntimeError(f'Error disconnecting from {self.ssid}. Return code: {e.returncode}, error: {e.stderr}') from e
             if self.connection_id:
@@ -648,7 +651,7 @@ class EZShare():
                 try:
                     subprocess.run(delete_cmd, shell=True, capture_output=True,
                                    text=True, check=True)
-                    logger.info('Successfully removed network profile for %s',
+                    logger.info('✅ Successfully removed network profile for %s',
                                 self.connection_id)
                 except subprocess.CalledProcessError as e:
                     # Profile deletion may fail due to insufficient privileges
@@ -663,7 +666,7 @@ class EZShare():
                 try:
                     subprocess.run(profile_cmd, shell=True,
                                    capture_output=True, text=True, check=True)
-                    logger.info('Successfully removed network profile for %s',
+                    logger.info('✅ Successfully removed network profile for %s',
                                 self.connection_id)
                 except subprocess.CalledProcessError as e:
                     raise RuntimeError(f'Error removing network profile for {self.ssid}. Return code: {e.returncode}, error: {e.stderr}') from e
@@ -673,7 +676,7 @@ class EZShare():
                 try:
                     subprocess.run(connect_cmd, shell=True,
                                    capture_output=True, text=True, check=True)
-                    logger.info('Successfully reconnected to original network profile: %s',
+                    logger.info('✅ Successfully reconnected to original network profile: %s',
                                 self.existing_connection_id)
                 except subprocess.CalledProcessError as e:
                     raise RuntimeError(f'Error reconnecting to original network profile: {self.existing_connection_id}. Return code: {e.returncode}, error: {e.stderr}') from e
