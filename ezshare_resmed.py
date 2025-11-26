@@ -730,6 +730,8 @@ def main():
     sleephq_enabled = config.getboolean('sleephq', 'enabled', fallback=False)
     sleephq_client_id = config.get('sleephq', 'client_id', fallback=None)
     sleephq_client_secret = config.get('sleephq', 'client_secret', fallback=None)
+    sleephq_username = config.get('sleephq', 'username', fallback=None)
+    sleephq_password = config.get('sleephq', 'password', fallback=None)
 
     # Parse command line arguments
     description = textwrap.dedent(f"""\
@@ -779,6 +781,10 @@ def main():
                         help='SleepHQ OAuth2 client ID')
     parser.add_argument('--sleephq-client-secret', type=str,
                         help='SleepHQ OAuth2 client secret')
+    parser.add_argument('--sleephq-username', type=str,
+                        help='SleepHQ username/email for non-interactive authentication')
+    parser.add_argument('--sleephq-password', type=str,
+                        help='SleepHQ password for non-interactive authentication')
     parser.add_argument('--force-sleephq-upload', action='store_true',
                         help='force re-upload of all files to SleepHQ, bypassing upload tracker')
     parser.add_argument('--version', action='version',
@@ -815,6 +821,10 @@ def main():
         sleephq_client_id = args.sleephq_client_id
     if args.sleephq_client_secret:
         sleephq_client_secret = args.sleephq_client_secret
+    if args.sleephq_username:
+        sleephq_username = args.sleephq_username
+    if args.sleephq_password:
+        sleephq_password = args.sleephq_password
 
     ignore_list = ignore.split(',')
 
@@ -851,7 +861,8 @@ def main():
     # Upload files to SleepHQ if enabled (must happen after disconnecting from
     # ez Share wifi, since that network has no internet access)
     if sleephq_enabled and sleephq_client:
-        sleephq_uploader.upload_to_sleephq(ezshare, sleephq_client, verbose, force=args.force_sleephq_upload)
+        sleephq_uploader.upload_to_sleephq(ezshare, sleephq_client, verbose, force=args.force_sleephq_upload,
+                                           username=sleephq_username, password=sleephq_password)
     
     ezshare.print('Complete')
 

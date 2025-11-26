@@ -4,7 +4,7 @@ import pathlib
 
 logger = logging.getLogger('ezshare_resmed')
 
-def upload_to_sleephq(ezshare, sleephq_client, verbose, force=False):
+def upload_to_sleephq(ezshare, sleephq_client, verbose, force=False, username=None, password=None):
     """
     Uploads the entire SD card mirror directory to SleepHQ.
 
@@ -16,6 +16,8 @@ def upload_to_sleephq(ezshare, sleephq_client, verbose, force=False):
         sleephq_client (SleepHQClient): The SleepHQ client object.
         verbose (bool): If verbose output should be shown.
         force (bool): If True, upload even if no new files were downloaded.
+        username (str, optional): SleepHQ username for non-interactive auth.
+        password (str, optional): SleepHQ password for non-interactive auth.
     """
     # Only upload if new files were downloaded (unless force is set)
     if not force and not ezshare.downloaded_files:
@@ -24,14 +26,20 @@ def upload_to_sleephq(ezshare, sleephq_client, verbose, force=False):
     
     # Authenticate if not already authenticated
     if not sleephq_client.is_authenticated():
-        # Prompt for credentials
-        print("\nSleepHQ authentication required")
-        username = input("SleepHQ username/email: ").strip()
-        password = getpass.getpass("SleepHQ password: ")
-        
-        if not sleephq_client.authenticate(username, password):
-            logger.error("Failed to authenticate with SleepHQ")
-            return
+        if username and password:
+            logger.info("Authenticating with SleepHQ using provided credentials")
+            if not sleephq_client.authenticate(username, password):
+                logger.error("Failed to authenticate with SleepHQ using provided credentials")
+                return
+        else:
+            # Prompt for credentials
+            print("\nSleepHQ authentication required")
+            username = input("SleepHQ username/email: ").strip()
+            password = getpass.getpass("SleepHQ password: ")
+            
+            if not sleephq_client.authenticate(username, password):
+                logger.error("Failed to authenticate with SleepHQ")
+                return
     
     # Collect files to upload based on incremental strategy
     # 1. Mandatory files (STR.edf, Identification.crc, Identification.json)
