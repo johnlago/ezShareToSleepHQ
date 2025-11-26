@@ -1,6 +1,6 @@
-This is an adaptation/extension of JCOvergaar’s excellent [CPAP-data-from-EZShare-SD tool](https://github.com/JCOvergaar/CPAP-data-from-EZShare-SD) for gathering CPAP data wirelessly from ResMed machines.
+This is an adaptation/extension of JCOvergaar’s excellent [CPAP-data-from-EZShare-SD tool](https://github.com/JCOvergaar/CPAP-data-from-EZShare-SD) for gathering CPAP data wirelessly from ResMed machines. It does so by using a WiFi-enabled SD card by ez Share (these can be found relatively inexpensively on sites like Ali Express).
 
-Like that original tool, the script assists in using a WiFi-enabled SD card by ezShare in a CPAP/BiPap device. Then (optionally) that data can be uploaded to a [SleepHQ](https://sleephq.com) Pro account. It is compatible with most ResMed devices from version 9 and up. The program runs on Python 3, and requires dependencies to be installed.
+Like that original tool, the program assists in copying the data from the SD card in the CPAP device to a local directory. Then (optionally) that data can be automatically uploaded to a [SleepHQ](https://sleephq.com) Pro account. It is compatible with most ResMed devices from version 9 and up. The program runs on Python 3, and requires dependencies to be installed.
 
 > [!NOTE]
 > I am absolutely not a programmer by trade, and much of the SleepHQ integration was completed with help from LLM coding assistants (but this documentation was written by hand). Please feel free to create issues or open PRs if the code or docs can be improved in any way!
@@ -70,13 +70,13 @@ In a text editor, copy the following template to create a config file, which wil
 # Path where your CPAP data will be saved
 path = ~/Documents/CPAP_Data/SD_card
 
-# URL of the ezShare card's web UI. If you don't know, leave this as is.
+# URL of the ez Share card's web UI. If you don't know, leave this as is.
 url = http://192.168.4.1/dir?dir=A:
 
-# SSID of the ezShare card. If you don't know, leave this as is.
+# SSID of the ez Share card. If you don't know, leave this as is.
 ssid = ez Share
 
-# Wifi password of the ezShare card. If you don't know, leave this as is.
+# Wifi password of the ez Share card. If you don't know, leave this as is.
 psk = 88888888
 
 # Earliest date (YYYYMMDD) for data to be considered for transfer (this will override day_count if set). Comment or delete the following line to unset.
@@ -167,7 +167,7 @@ The script may be run directly from the terminal with optional flags, rather tha
 | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `-h`, `--help`                          | Show this help message and exit                                                                                                          |
 | `--path PATH`                           | Path where your CPAP data will be saved. Defaults to `$HOME/Documents/CPAP_Data/SD_card`                                                 |
-| `--url URL`                             | URL of the ezShare card’s web UI. Defaults to `http://192.168.4.1/dir?dir=A:`                                                            |
+| `--url URL`                             | URL of the ez Share card’s web UI. Defaults to `http://192.168.4.1/dir?dir=A:`                                                            |
 | `--start_from START_FROM`               | Earliest date (YYYYMMDD) for data to be considered for transfer (this will override `day_count` if set).                                 |
 | `--day_count DAY_COUNT`, `-n DAY_COUNT` | Number of days to transfer. If both `start_from` and `day_count` are unset, all files will be considered for transfer. Defaults to None. |
 | `--show_progress`                       | Show progress. Defaults to True.                                                                                                         |
@@ -175,8 +175,8 @@ The script may be run directly from the terminal with optional flags, rather tha
 | `--overwrite`                           | Force overwriting existing files. Defaults to False.                                                                                     |
 | `--keep_old`                            | Do not overwrite even if newer version is available. Defaults to False.                                                                  |
 | `--ignore IGNORE`                       | Case-insensitive comma separated list (no spaces) of files to ignore. Defaults to `JOURNAL.JNL,ezshare.cfg,System Volume Information`.   |
-| `--ssid SSID`                           | SSID of the ezShare card. WiFi connection will be attempted if set. Defaults to `ez Share`.                                              |
-| `--psk PSK`                             | Wifi password of the ezShare card. Defaults to `88888888`.                                                                               |
+| `--ssid SSID`                           | SSID of the ez Share card. WiFi connection will be attempted if set. Defaults to `ez Share`.                                              |
+| `--psk PSK`                             | Wifi password of the ez Share card. Defaults to `88888888`.                                                                               |
 | `--retries RETRIES`                     | Number of times to retry if transfer fails. Defaults to 5.                                                                               |
 | `--upload-to-sleephq`                   | Upload data to a SleepHQ account. Defaults to False.                                                                                     |
 | `--sleephq-client-id`                   | SleepHQ client ID. Can be generated at sleephq.com.                                                                                      |
