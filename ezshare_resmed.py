@@ -23,7 +23,6 @@ import tqdm
 from urllib3.util import retry
 
 from sleephq_client import SleepHQClient
-from upload_tracker import UploadTracker
 import sleephq_uploader
 
 
