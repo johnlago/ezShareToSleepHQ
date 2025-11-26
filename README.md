@@ -2,7 +2,8 @@ This is an adaptation/extension of [JCOvergaar’s excellent CPAP-data-from-EZSh
 
 Like that original tool, the script assists in using a WiFi-enabled SD card by ezShare in a CPAP/BiPap device. Then (optionally) that data can be uploaded to a [SleepHQ](https://sleephq.com) Pro account. It is compatible with most ResMed devices from version 9 and up. The program runs on Python 3, and requires dependencies to be installed.
 
-**Disclaimer:** I am absolutely not a programmer by trade, and much of the SleepHQ integration was completed with help from LLM coding assistants (but this documentation was written by hand). Please feel free to create issues or open PRs if the code or docs can be improved in any way!
+> [!NOTE]
+> **Disclaimer:** I am absolutely not a programmer by trade, and much of the SleepHQ integration was completed with help from LLM coding assistants (but this documentation was written by hand). Please feel free to create issues or open PRs if the code or docs can be improved in any way!
 
 ## Setup
 
@@ -12,7 +13,9 @@ I find a [Raspberry Pi](https://www.raspberrypi.com/) to be a good conduit for t
 
 ### Set up and run the program
 
-0. Make sure [Git](https://en.wikipedia.org/wiki/Git) and [Python 3](https://www.python.org/downloads/) are both installed. In your terminal:
+#### 0. Prerequisites
+
+Make sure [Git](https://en.wikipedia.org/wiki/Git) and [Python 3](https://www.python.org/downloads/) are both installed. In your terminal:
 
 ```bash
 sudo apt update
@@ -20,14 +23,17 @@ sudo apt install git
 sudo apt install -y python3-pip
 ```
 
-1. Navigate to a directory you wish to keep the project in and clone this repo to it. In your terminal:
+#### 1. Clone the repository
+
+Navigate to a directory you wish to keep the project in and clone this repo to it. In your terminal:
 
 ```bash
 cd /path/to/anywhere
 git clone https://github.com/johnlago/EZShareToSleepHQ
 ```
 
-2. Navigate to the project directory and install the program and its dependencies. In your terminal:
+#### 2. Install
+Navigate to the project directory and install the program and its dependencies. In your terminal:
 
 ```bash
 cd EZShareToSleepHQ
@@ -48,7 +54,9 @@ zhs:
 echo 'export PATH="\$HOME/.local/bin:\$PATH"' >> ~/.zshrc && source ~/.zshrc
 ```
 
-3. In a text editor, copy the following template to create a config file, which will save your settings. Save it in one of these locations:
+#### 3. Set up the config file
+
+In a text editor, copy the following template to create a config file, which will save your settings. Save it in one of these locations:
 
 - `./ezshare_resmed.ini` - In the same directory as the **installed** script
 - `./config.ini` - In the same directory as the **installed** script
@@ -111,7 +119,7 @@ client_secret = your_sleephq_client_secret
 
 In order to get your SleepHQ client ID and secret, you must be a [Pro plan subscriber](https://www.sleephq.com/#pricing). Once logged in, click “Account Settings.” In the “API Keys” section, click “Add API Key.” A new row should appear, with buttons to copy each value.
 
-4. Run the program manually from the terminal.
+#### 4. Run the program manually from the terminal
 
 ```bash
 ezshare_resmed
