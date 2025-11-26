@@ -132,11 +132,11 @@ In order to get your SleepHQ client ID and secret, you must be a [Pro plan subsc
 ezshare_resmed
 ```
 
-If it’s installed and configured correctly, it will connect to the SD card’s WiFi network, find new data files, and transfer them to the location you specified in the config file. Next, it will prompt you for your SleepHQ username and password. If it’s successful, it will show feedback about the data as it bundles, uploads, and triggers processing of that data.
+If it’s installed and configured correctly, it will connect to the SD card’s WiFi network, find new data files, and transfer them to the location you specified in the config file. Next, it will prompt you for your SleepHQ username and password. If it’s successful, it will show feedback about the data as it bundles, uploads, and triggers processing for that data.
 
 ### Automate the transfers
 
-After the first run, you should not need to provide the username/password again. Therefore, we can use [cron](https://en.wikipedia.org/wiki/Cron) (or anything else that can trigger the program) to schedule periodic automatic transfers and uploads.
+We can use [cron](https://en.wikipedia.org/wiki/Cron) (or anything else that can trigger the program) to schedule periodic automatic transfers and uploads. In order for this to run unattended, you will need to store your SleepHQ username and password in the config file or add them to the Cron command.
 
 In your terminal, open the crontab editor.
 
@@ -156,7 +156,7 @@ Or specify a config file:
 0 */6 * * * /path/to/ezshare_resmed --config /path/to/config.ini
 ```
 
-I have mine run every 15 minutes between the hours of 7am and 11am (to grab data no matter when I wake up!), with logs being written to a specific file:
+I have mine run every 15 minutes between the hours of 7am and noon (to grab data no matter when I wake up!), with logs being written to a specific file:
 
 ```
 0,15,30,45 7-11 * * * /home/pi/.local/bin/ezshare_resmed >> /home/pi/cron.log 2>&1
