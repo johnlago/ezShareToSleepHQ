@@ -119,6 +119,8 @@ client_secret = your_sleephq_client_secret
 
 In order to get your SleepHQ client ID and secret, you must be a [Pro plan subscriber](https://www.sleephq.com/#pricing). Once logged in, click “Account Settings.” In the “API Keys” section, click “Add API Key.” A new row should appear, with buttons to copy each value.
 
+![The API Key section of SleepHQ settings](docs/sleephq_api_keys.jpg)
+
 #### 4. Run the program manually from the terminal
 
 ```bash
