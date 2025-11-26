@@ -115,6 +115,11 @@ client_id = your_sleephq_client_id
 # Your SleepHQ client secret
 client_secret = your_sleephq_client_secret
 
+# Your SleepHQ username/email address
+username = your_username
+
+# Your SleepHQ password. WARNING: You are saving your password as plaintext in this config file. Make sure you understand the risks before doing so, and don't reuse passwords!
+password = your_password
 ```
 
 In order to get your SleepHQ client ID and secret, you must be a [Pro plan subscriber](https://www.sleephq.com/#pricing). Once logged in, click “Account Settings.” In the “API Keys” section, click “Add API Key.” A new row should appear, with buttons to copy each value.
@@ -165,26 +170,28 @@ The script is smart enough to detect and transfer only data that is new on each 
 
 The script may be run directly from the terminal with optional flags, rather than a config file. These are the options:
 
-| Argument                                | Description                                                                                                                              |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `-h`, `--help`                          | Show this help message and exit                                                                                                          |
-| `--path PATH`                           | Path where your CPAP data will be saved. Defaults to `$HOME/Documents/CPAP_Data/SD_card`                                                 |
-| `--url URL`                             | URL of the ez Share card’s web UI. Defaults to `http://192.168.4.1/dir?dir=A:`                                                            |
-| `--start_from START_FROM`               | Earliest date (YYYYMMDD) for data to be considered for transfer (this will override `day_count` if set).                                 |
-| `--day_count DAY_COUNT`, `-n DAY_COUNT` | Number of days to transfer. If both `start_from` and `day_count` are unset, all files will be considered for transfer. Defaults to None. |
-| `--show_progress`                       | Show progress. Defaults to True.                                                                                                         |
-| `--verbose`, `-v`                       | Verbose output. Defaults to False.                                                                                                       |
-| `--overwrite`                           | Force overwriting existing files. Defaults to False.                                                                                     |
-| `--keep_old`                            | Do not overwrite even if newer version is available. Defaults to False.                                                                  |
-| `--ignore IGNORE`                       | Case-insensitive comma separated list (no spaces) of files to ignore. Defaults to `JOURNAL.JNL,ezshare.cfg,System Volume Information`.   |
-| `--ssid SSID`                           | SSID of the ez Share card. WiFi connection will be attempted if set. Defaults to `ez Share`.                                              |
-| `--psk PSK`                             | Wifi password of the ez Share card. Defaults to `88888888`.                                                                               |
-| `--retries RETRIES`                     | Number of times to retry if transfer fails. Defaults to 5.                                                                               |
-| `--upload-to-sleephq`                   | Upload data to a SleepHQ account. Defaults to False.                                                                                     |
-| `--sleephq-client-id`                   | SleepHQ client ID. Can be generated at sleephq.com.                                                                                      |
-| `--sleephq-client-secret`               | SleepHQ client secret. Can be generated at sleephq.com.                                                                                  |
-| `--force-sleephq-upload`                | Force upload of all files to SleepHQ, bypassing the upload tracker                                                                       |
-| `--version`                             | Show program’s version number and exit                                                                                                   |
+| Argument                                | Description                                                                                                                                                           |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-h`, `--help`                          | Show this help message and exit                                                                                                                                       |
+| `--path PATH`                           | Path where your CPAP data will be saved. Defaults to `$HOME/Documents/CPAP_Data/SD_card`                                                                              |
+| `--url URL`                             | URL of the ez Share card’s web UI. Defaults to `http://192.168.4.1/dir?dir=A:`                                                                                        |
+| `--start_from START_FROM`               | Earliest date (YYYYMMDD) for data to be considered for transfer (this will override `day_count` if set).                                                              |
+| `--day_count DAY_COUNT`, `-n DAY_COUNT` | Number of days to transfer. If both `start_from` and `day_count` are unset, all files will be considered for transfer. Defaults to None.                              |
+| `--show_progress`                       | Show progress. Defaults to True.                                                                                                                                      |
+| `--verbose`, `-v`                       | Verbose output. Defaults to False.                                                                                                                                    |
+| `--overwrite`                           | Force overwriting existing files. Defaults to False.                                                                                                                  |
+| `--keep_old`                            | Do not overwrite even if newer version is available. Defaults to False.                                                                                               |
+| `--ignore IGNORE`                       | Case-insensitive comma separated list (no spaces) of files to ignore. Defaults to `JOURNAL.JNL,ezshare.cfg,System Volume Information`.                                |
+| `--ssid SSID`                           | SSID of the ez Share card. WiFi connection will be attempted if set. Defaults to `ez Share`.                                                                          |
+| `--psk PSK`                             | Wifi password of the ez Share card. Defaults to `88888888`.                                                                                                           |
+| `--retries RETRIES`                     | Number of times to retry if transfer fails. Defaults to 5.                                                                                                            |
+| `--upload-to-sleephq`                   | Upload data to a SleepHQ account. Defaults to False.                                                                                                                  |
+| `--sleephq-client-id`                   | SleepHQ client ID. Can be generated at sleephq.com.                                                                                                                   |
+| `--sleephq-client-secret`               | SleepHQ client secret. Can be generated at sleephq.com.                                                                                                               |
+| `--force-sleephq-upload`                | Force upload of all files to SleepHQ, bypassing the upload tracker                                                                                                    |
+| `--sleephq-username`                    | Your SleepHQ username/email address                                                                                                                                   |
+| `--sleephq-password`                    | Your SleepHQ password. **WARNING: You are adding a plain-text password to the command line. Don’t reuse passwords, and make sure you understand what you are doing.** |
+| `--version`                             | Show program’s version number and exit                                                                                                                                |
 
 **Example:**
 
