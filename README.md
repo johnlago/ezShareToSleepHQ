@@ -3,7 +3,7 @@ This is an adaptation/extension of [JCOvergaar’s excellent CPAP-data-from-EZSh
 Like that original tool, the script assists in using a WiFi-enabled SD card by ezShare in a CPAP/BiPap device. Then (optionally) that data can be uploaded to a [SleepHQ](https://sleephq.com) Pro account. It is compatible with most ResMed devices from version 9 and up. The program runs on Python 3, and requires dependencies to be installed.
 
 > [!NOTE]
-> **Disclaimer:** I am absolutely not a programmer by trade, and much of the SleepHQ integration was completed with help from LLM coding assistants (but this documentation was written by hand). Please feel free to create issues or open PRs if the code or docs can be improved in any way!
+> I am absolutely not a programmer by trade, and much of the SleepHQ integration was completed with help from LLM coding assistants (but this documentation was written by hand). Please feel free to create issues or open PRs if the code or docs can be improved in any way!
 
 ## Setup
 
