@@ -25,7 +25,7 @@ sudo apt install -y python3-pip
 
 #### 1. Clone the repository
 
-Navigate to a directory you wish to keep the project in and clone this repo to it. In your terminal:
+Navigate to a directory you wish to keep the project in and clone this repo to it.
 
 ```bash
 cd /path/to/anywhere
@@ -33,7 +33,7 @@ git clone https://github.com/johnlago/EZShareToSleepHQ
 ```
 
 #### 2. Install
-Navigate to the project directory and install the program and its dependencies. In your terminal:
+Navigate to the project directory and install the program and its dependencies.
 
 ```bash
 cd EZShareToSleepHQ
