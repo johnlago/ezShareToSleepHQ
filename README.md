@@ -1,8 +1,6 @@
-This is an adaptation/extension of [JCOvergaar’s CPAP-data-from-EZShare-SD](https://github.com/JCOvergaar/CPAP-data-from-EZShare-SD) tool for gathering CPAP data from Resmed machines.
+This is an adaptation/extension of [JCOvergaar’s excellent CPAP-data-from-EZShare-SD](https://github.com/JCOvergaar/CPAP-data-from-EZShare-SD) tool for gathering CPAP data wirelessly from ResMed machines.
 
-Like that original tool, the script assists in using a WiFi-enabled SD card by ezShare in a CPAP/BiPap device. Then (optionally) that data can be uploaded to a [SleepHQ](https://sleephq.com) Pro account. It is compatible with most ResMed devices from version 9 and up.
-
-The program runs on Python 3, and requires dependencies to be installed. Python versions 3.9 to 3.12 have been tested.
+Like that original tool, the script assists in using a WiFi-enabled SD card by ezShare in a CPAP/BiPap device. Then (optionally) that data can be uploaded to a [SleepHQ](https://sleephq.com) Pro account. It is compatible with most ResMed devices from version 9 and up. The program runs on Python 3, and requires dependencies to be installed.
 
 **Disclaimer:** I am absolutely not a programmer by trade, and much of the SleepHQ integration was completed with help from LLM coding assistants (but this documentation was written by hand). Please feel free to create issues or open PRs if the code or docs can be improved in any way!
 
@@ -10,7 +8,7 @@ The program runs on Python 3, and requires dependencies to be installed. Python 
 
 This explanation is fairly detailed in order to be useful to less technically-inclined users.
 
-I find a [Raspberry Pi](https://www.raspberrypi.com/) to be a good conduit for this system, as it can be left on all the time and has WiFi built in. This guide is written for Raspberry Pi/Linux. However, it will work on Mac and Windows as well (for windows, you will use ``)
+I find a [Raspberry Pi](https://www.raspberrypi.com/) to be a good conduit for this system, as it can be left on all the time and has WiFi built in. This guide is written for Raspberry Pi/Linux. However, it will work on Mac and Windows as well (see the bottom of this document for limited help).
 
 ### Set up and run the program
 
