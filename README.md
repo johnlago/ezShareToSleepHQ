@@ -1,4 +1,4 @@
-This is an adaptation/extension of [JCOvergaar’s excellent CPAP-data-from-EZShare-SD](https://github.com/JCOvergaar/CPAP-data-from-EZShare-SD) tool for gathering CPAP data wirelessly from ResMed machines.
+This is an adaptation/extension of JCOvergaar’s excellent [CPAP-data-from-EZShare-SD tool](https://github.com/JCOvergaar/CPAP-data-from-EZShare-SD) for gathering CPAP data wirelessly from ResMed machines.
 
 Like that original tool, the script assists in using a WiFi-enabled SD card by ezShare in a CPAP/BiPap device. Then (optionally) that data can be uploaded to a [SleepHQ](https://sleephq.com) Pro account. It is compatible with most ResMed devices from version 9 and up. The program runs on Python 3, and requires dependencies to be installed.
 
@@ -9,9 +9,9 @@ Like that original tool, the script assists in using a WiFi-enabled SD card by e
 
 This explanation is fairly detailed in order to be useful to less technically-inclined users.
 
-I find a [Raspberry Pi](https://www.raspberrypi.com/) to be a good conduit for this system, as it can be left on all the time and has WiFi built in. This guide is written for Raspberry Pi/Linux. However, it will work on Mac and Windows as well (see the bottom of this document for limited help).
+I find a [Raspberry Pi](https://www.raspberrypi.com/) to be a good conduit for this system, as it can be left on all the time and has WiFi built in. This guide is written for Raspberry Pi/Linux. However, it will work on Mac and Windows as well (there is even a `.bat` installer for Windows).
 
-### Set up and run the program
+### Installation and first run
 
 #### 0. Prerequisites
 
@@ -125,11 +125,11 @@ In order to get your SleepHQ client ID and secret, you must be a [Pro plan subsc
 ezshare_resmed
 ```
 
-If it’s installed and configured correctly, it will connect to the SD card’s wifi network, find new data files, and transfer them to the location you specified in the config file. Next, it will prompt you for your SleepHQ username and password. If it’s successful, it will show feedback about the data as it bundles, uploads, and triggers processing of that data.
+If it’s installed and configured correctly, it will connect to the SD card’s WiFi network, find new data files, and transfer them to the location you specified in the config file. Next, it will prompt you for your SleepHQ username and password. If it’s successful, it will show feedback about the data as it bundles, uploads, and triggers processing of that data.
 
 ### Automate the transfers
 
-After the first run, you should not need to provide the username/password again. Therefore, we can use [cron](https://en.wikipedia.org/wiki/Cron) to schedule periodic automatic transfers and uploads.
+After the first run, you should not need to provide the username/password again. Therefore, we can use [cron](https://en.wikipedia.org/wiki/Cron) (or anything else that can trigger the program) to schedule periodic automatic transfers and uploads.
 
 In your terminal, open the crontab editor.
 
@@ -154,8 +154,8 @@ I have mine run every 15 minutes between the hours of 7am and 11am (to grab data
 ```
 0,15,30,45 7-11 * * * /home/pi/.local/bin/ezshare_resmed >> /home/pi/cron.log 2>&1
 ```
-
-Note that cron requires the full path to the script, so `ezshare_resmed` alone will not work as it does on the terminal.
+> [!NOTE]
+> Cron requires the full path to the script, so `ezshare_resmed` alone will not work as it does on the terminal.
 
 The script is smart enough to detect and transfer only data that is new on each run, and SleepHQ also deduplicates redundant data. Therefore, it’s safe to run this script at a regular interval — _even while your ResMed machine is in use_ — without bloating your local storage or creating very large SleepHQ uploads.
 
