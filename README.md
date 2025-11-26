@@ -1,4 +1,4 @@
-This is an adaptation/extension of JCOvergaar’s excellent [CPAP-data-from-EZShare-SD tool](https://github.com/JCOvergaar/CPAP-data-from-EZShare-SD) for gathering CPAP data wirelessly from ResMed machines. It does so by using a WiFi-enabled SD card by ez Share (these can be found relatively inexpensively on sites like Ali Express).
+This is a fork of JCOvergaar’s excellent [CPAP-data-from-EZShare-SD tool](https://github.com/JCOvergaar/CPAP-data-from-EZShare-SD) for gathering CPAP data wirelessly from ResMed machines. It does so by using a WiFi-enabled SD card by ez Share (these can be found relatively inexpensively on sites like Ali Express).
 
 Like that original tool, the program assists in copying the data from the SD card in the CPAP device to a local directory. Then (optionally) that data can be automatically uploaded to a [SleepHQ](https://sleephq.com) Pro account. It is compatible with most ResMed devices from version 9 and up. The program runs on Python 3, and requires dependencies to be installed.
 
