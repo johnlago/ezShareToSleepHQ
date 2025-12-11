@@ -272,9 +272,35 @@ class EZShare():
                 logger.warning('sudo iw scan also failed: %s', e2.stderr.strip())
 
         if self.psk:
-            connect_cmd = f'nmcli d wifi connect "{self.ssid}" password "{self.psk}" ifname "{self.interface_name}"'
+            logger.info('Configuring WPA2 connection for %s...', self.ssid)
         else:
-            connect_cmd = f'nmcli device wifi connect "{self.ssid}" ifname "{self.interface_name}"'
+            logger.info('Configuring Open connection for %s...', self.ssid)
+
+        # 1. Delete existing connection profile to ensure a clean state
+        # (Ignore errors if it doesn't exist)
+        subprocess.run(f'nmcli connection delete "{self.ssid}"', shell=True,
+                       capture_output=True, text=True)
+
+        # 2. Create a new connection profile
+        add_cmd = f'nmcli connection add type wifi con-name "{self.ssid}" ifname "{self.interface_name}" ssid "{self.ssid}"'
+        try:
+             subprocess.run(add_cmd, shell=True, capture_output=True, text=True, check=True)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f'Error creating network profile for {self.ssid}. Return code: {e.returncode}, error: {e.stderr}') from e
+
+        # 3. Configure security settings explictly
+        if self.psk:
+            modify_cmd = f'nmcli connection modify "{self.ssid}" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "{self.psk}"'
+        else:
+            modify_cmd = f'nmcli connection modify "{self.ssid}" wifi-sec.key-mgmt none'
+        
+        try:
+            subprocess.run(modify_cmd, shell=True, capture_output=True, text=True, check=True)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f'Error configuring network security for {self.ssid}. Return code: {e.returncode}, error: {e.stderr}') from e
+
+        # 4. Connect
+        connect_cmd = f'nmcli connection up "{self.ssid}"'
         try:
             connect_result = subprocess.run(connect_cmd, shell=True,
                                             capture_output=True, text=True,
