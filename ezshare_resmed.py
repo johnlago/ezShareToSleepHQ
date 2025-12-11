@@ -262,7 +262,14 @@ class EZShare():
             subprocess.run(rescan_cmd, shell=True, capture_output=True, text=True, check=True)
             time.sleep(8)  # Give time for scan results to populate
         except subprocess.CalledProcessError as e:
-            logger.warning('Network rescan failed (continuing anyway): %s', e.stderr)
+            logger.warning('nmcli rescan failed (likely permission), trying sudo iw scan: %s', e.stderr.strip())
+            # Fallback to iw scan as requested by user for Pi Zero
+            try:
+                # Capture output to avoid spamming stdout, but we don't need the result
+                subprocess.run(f'sudo iw {self.interface_name} scan', shell=True, capture_output=True, text=True, check=True)
+                time.sleep(8)
+            except subprocess.CalledProcessError as e2:
+                logger.warning('sudo iw scan also failed: %s', e2.stderr.strip())
 
         if self.psk:
             connect_cmd = f'nmcli d wifi connect "{self.ssid}" password "{self.psk}" ifname "{self.interface_name}"'
