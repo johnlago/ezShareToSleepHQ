@@ -274,7 +274,7 @@ class EZShare():
         if self.psk:
             connect_cmd = f'nmcli d wifi connect "{self.ssid}" password "{self.psk}" ifname "{self.interface_name}"'
         else:
-            connect_cmd = f'nmcli connection up "{self.ssid}" ifname "{self.interface_name}"'
+            connect_cmd = f'nmcli device wifi connect "{self.ssid}" ifname "{self.interface_name}"'
         try:
             connect_result = subprocess.run(connect_cmd, shell=True,
                                             capture_output=True, text=True,
