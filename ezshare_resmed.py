@@ -191,6 +191,32 @@ class EZShare():
         if self.show_progress:
             print(message)
 
+    def _run_nmcli(self, cmd, error_msg, ignore_error=False):
+        """
+        Helper to run nmcli commands with automatic sudo retry if permission denied
+        """
+        try:
+            return subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
+        except subprocess.CalledProcessError as e:
+            # Check for permission issues via return code (4) or error message text
+            err_text = e.stderr.lower() if e.stderr else ""
+            is_perm_issue = (e.returncode == 4) or \
+                            ('privileges' in err_text) or \
+                            ('permission' in err_text) or \
+                            ('authorized' in err_text)
+
+            if is_perm_issue:
+                logger.warning('Command failed due to permissions, retrying with sudo: %s', cmd)
+                sudo_cmd = f'sudo {cmd}'
+                try:
+                    return subprocess.run(sudo_cmd, shell=True, capture_output=True, text=True, check=True)
+                except subprocess.CalledProcessError as e2:
+                    if ignore_error: return None
+                    raise RuntimeError(f'{error_msg}. Return code: {e2.returncode}, error: {e2.stderr}') from e2
+            
+            if ignore_error: return None
+            raise RuntimeError(f'{error_msg}. Return code: {e.returncode}, error: {e.stderr}') from e
+
     def connect_to_wifi(self):
         """
         Wifi Connect - Connect to EZShare Wi-Fi network specified in ssid
@@ -271,38 +297,14 @@ class EZShare():
             except subprocess.CalledProcessError as e2:
                 logger.warning('sudo iw scan also failed: %s', e2.stderr.strip())
 
-        def _run_nmcli_with_retry(cmd, error_msg, ignore_error=False):
-            try:
-                subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
-            except subprocess.CalledProcessError as e:
-                # Check for permission issues via return code (4) or error message text
-                err_text = e.stderr.lower() if e.stderr else ""
-                is_perm_issue = (e.returncode == 4) or \
-                                ('privileges' in err_text) or \
-                                ('permission' in err_text) or \
-                                ('authorized' in err_text)
-
-                if is_perm_issue:
-                    logger.warning('Command failed due to permissions, retrying with sudo: %s', cmd)
-                    sudo_cmd = f'sudo {cmd}'
-                    try:
-                        subprocess.run(sudo_cmd, shell=True, capture_output=True, text=True, check=True)
-                        return
-                    except subprocess.CalledProcessError as e2:
-                        if ignore_error: return
-                        raise RuntimeError(f'{error_msg}. Return code: {e2.returncode}, error: {e2.stderr}') from e2
-                
-                if ignore_error: return
-                raise RuntimeError(f'{error_msg}. Return code: {e.returncode}, error: {e.stderr}') from e
-
         if self.psk:
             logger.info('Configuring WPA2 connection for %s...', self.ssid)
         else:
             logger.info('Configuring Open connection for %s...', self.ssid)
 
         # 1. Delete existing connection profile to ensure a clean state
-        _run_nmcli_with_retry(f'nmcli connection delete "{self.ssid}"', 
-                              f'Error deleting profile {self.ssid}', ignore_error=True)
+        self._run_nmcli(f'nmcli connection delete "{self.ssid}"', 
+                        f'Error deleting profile {self.ssid}', ignore_error=True)
 
         # 2. Create a new connection profile with security settings included
         cmd = f'nmcli connection add type wifi con-name "{self.ssid}" ifname "{self.interface_name}" ssid "{self.ssid}"'
@@ -311,12 +313,12 @@ class EZShare():
         else:
             cmd += f' wifi-sec.key-mgmt none'
 
-        _run_nmcli_with_retry(cmd, f'Error adding network profile for {self.ssid}')
+        self._run_nmcli(cmd, f'Error adding network profile for {self.ssid}')
 
         # 3. Connect
         connect_cmd = f'nmcli connection up "{self.ssid}"'
         try:
-            _run_nmcli_with_retry(connect_cmd, f'Error connecting to {self.ssid}')
+            connect_result = self._run_nmcli(connect_cmd, f'Error connecting to {self.ssid}')
             self.connection_id = self.ssid
             self.connected = True
         except RuntimeError:
@@ -692,26 +694,16 @@ class EZShare():
         elif self.platform_system == 'Linux' and self.interface_name is not None:
             if self.connected:
                 self.print(f'Disconnecting from {self.ssid}')
-                disconnect_cmd = f'nmcli connection down {self.connection_id}'
-                try:
-                    subprocess.run(disconnect_cmd, shell=True,
-                                   capture_output=True, text=True, check=True)
-                    logger.info('✅ Successfully disconnected from %s', self.ssid)
-                except subprocess.CalledProcessError as e:
-                    raise RuntimeError(f'Error disconnecting from {self.ssid}. Return code: {e.returncode}, error: {e.stderr}') from e
+                # Use retry helper and fix quoting
+                disconnect_cmd = f'nmcli connection down "{self.connection_id}"'
+                self._run_nmcli(disconnect_cmd, f'Error disconnecting from {self.ssid}')
+                logger.info('✅ Successfully disconnected from %s', self.ssid)
+
             if self.connection_id:
                 self.print(f'Removing profile for {self.connection_id}...')
                 delete_cmd = f'nmcli connection delete "{self.connection_id}"'
-                try:
-                    subprocess.run(delete_cmd, shell=True, capture_output=True,
-                                   text=True, check=True)
-                    logger.info('✅ Successfully removed network profile for %s',
-                                self.connection_id)
-                except subprocess.CalledProcessError as e:
-                    # Profile deletion may fail due to insufficient privileges
-                    # This is non-fatal - the important thing is we disconnected
-                    logger.warning('Could not remove network profile for %s (may require sudo): %s',
-                                   self.connection_id, e.stderr.strip() if e.stderr else f'exit code {e.returncode}')
+                self._run_nmcli(delete_cmd, f'Could not remove network profile for {self.connection_id}', ignore_error=True)
+                logger.info('✅ Successfully removed network profile for %s', self.connection_id)
 
         elif self.platform_system == 'Windows':
             if self.connection_id:
