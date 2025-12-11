@@ -255,10 +255,19 @@ class EZShare():
         Raises:
             RuntimeError: When automatically connecting to WiFi fails
         """
+        # Rescan to wake up the radio and ensure the network is visible
+        logger.info('Scanning for networks on interface %s...', self.interface_name)
+        rescan_cmd = f'nmcli device wifi rescan ifname "{self.interface_name}"'
+        try:
+            subprocess.run(rescan_cmd, shell=True, capture_output=True, text=True, check=True)
+            time.sleep(8)  # Give time for scan results to populate
+        except subprocess.CalledProcessError as e:
+            logger.warning('Network rescan failed (continuing anyway): %s', e.stderr)
+
         if self.psk:
-            connect_cmd = f'nmcli d wifi connect "{self.ssid}" password "{self.psk}"'
+            connect_cmd = f'nmcli d wifi connect "{self.ssid}" password "{self.psk}" ifname "{self.interface_name}"'
         else:
-            connect_cmd = f'nmcli connection up "{self.ssid}"'
+            connect_cmd = f'nmcli connection up "{self.ssid}" ifname "{self.interface_name}"'
         try:
             connect_result = subprocess.run(connect_cmd, shell=True,
                                             capture_output=True, text=True,
