@@ -275,8 +275,14 @@ class EZShare():
             try:
                 subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
             except subprocess.CalledProcessError as e:
-                # Retrying with sudo if permission denied (exit code 4 generally)
-                if e.returncode == 4:
+                # Check for permission issues via return code (4) or error message text
+                err_text = e.stderr.lower() if e.stderr else ""
+                is_perm_issue = (e.returncode == 4) or \
+                                ('privileges' in err_text) or \
+                                ('permission' in err_text) or \
+                                ('authorized' in err_text)
+
+                if is_perm_issue:
                     logger.warning('Command failed due to permissions, retrying with sudo: %s', cmd)
                     sudo_cmd = f'sudo {cmd}'
                     try:
@@ -298,23 +304,18 @@ class EZShare():
         _run_nmcli_with_retry(f'nmcli connection delete "{self.ssid}"', 
                               f'Error deleting profile {self.ssid}', ignore_error=True)
 
-        # 2. Create a new connection profile
-        add_cmd = f'nmcli connection add type wifi con-name "{self.ssid}" ifname "{self.interface_name}" ssid "{self.ssid}"'
-        _run_nmcli_with_retry(add_cmd, f'Error creating network profile for {self.ssid}')
-
-        # 3. Configure security settings explictly
+        # 2. Create a new connection profile with security settings included
+        cmd = f'nmcli connection add type wifi con-name "{self.ssid}" ifname "{self.interface_name}" ssid "{self.ssid}"'
         if self.psk:
-            modify_cmd = f'nmcli connection modify "{self.ssid}" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "{self.psk}"'
+            cmd += f' wifi-sec.key-mgmt wpa-psk wifi-sec.psk "{self.psk}"'
         else:
-            modify_cmd = f'nmcli connection modify "{self.ssid}" wifi-sec.key-mgmt none'
-        
-        _run_nmcli_with_retry(modify_cmd, f'Error configuring network security for {self.ssid}')
+            cmd += f' wifi-sec.key-mgmt none'
 
-        # 4. Connect
+        _run_nmcli_with_retry(cmd, f'Error adding network profile for {self.ssid}')
+
+        # 3. Connect
         connect_cmd = f'nmcli connection up "{self.ssid}"'
         try:
-            # We use the helper here too, but we need to capture the connection_id logic from the original code
-            # Actually, for explicit profile creation, the connection ID is just self.ssid.
             _run_nmcli_with_retry(connect_cmd, f'Error connecting to {self.ssid}')
             self.connection_id = self.ssid
             self.connected = True
