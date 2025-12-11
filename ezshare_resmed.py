@@ -271,22 +271,36 @@ class EZShare():
             except subprocess.CalledProcessError as e2:
                 logger.warning('sudo iw scan also failed: %s', e2.stderr.strip())
 
+        def _run_nmcli_with_retry(cmd, error_msg, ignore_error=False):
+            try:
+                subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
+            except subprocess.CalledProcessError as e:
+                # Retrying with sudo if permission denied (exit code 4 generally)
+                if e.returncode == 4:
+                    logger.warning('Command failed due to permissions, retrying with sudo: %s', cmd)
+                    sudo_cmd = f'sudo {cmd}'
+                    try:
+                        subprocess.run(sudo_cmd, shell=True, capture_output=True, text=True, check=True)
+                        return
+                    except subprocess.CalledProcessError as e2:
+                        if ignore_error: return
+                        raise RuntimeError(f'{error_msg}. Return code: {e2.returncode}, error: {e2.stderr}') from e2
+                
+                if ignore_error: return
+                raise RuntimeError(f'{error_msg}. Return code: {e.returncode}, error: {e.stderr}') from e
+
         if self.psk:
             logger.info('Configuring WPA2 connection for %s...', self.ssid)
         else:
             logger.info('Configuring Open connection for %s...', self.ssid)
 
         # 1. Delete existing connection profile to ensure a clean state
-        # (Ignore errors if it doesn't exist)
-        subprocess.run(f'nmcli connection delete "{self.ssid}"', shell=True,
-                       capture_output=True, text=True)
+        _run_nmcli_with_retry(f'nmcli connection delete "{self.ssid}"', 
+                              f'Error deleting profile {self.ssid}', ignore_error=True)
 
         # 2. Create a new connection profile
         add_cmd = f'nmcli connection add type wifi con-name "{self.ssid}" ifname "{self.interface_name}" ssid "{self.ssid}"'
-        try:
-             subprocess.run(add_cmd, shell=True, capture_output=True, text=True, check=True)
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(f'Error creating network profile for {self.ssid}. Return code: {e.returncode}, error: {e.stderr}') from e
+        _run_nmcli_with_retry(add_cmd, f'Error creating network profile for {self.ssid}')
 
         # 3. Configure security settings explictly
         if self.psk:
@@ -294,20 +308,18 @@ class EZShare():
         else:
             modify_cmd = f'nmcli connection modify "{self.ssid}" wifi-sec.key-mgmt none'
         
-        try:
-            subprocess.run(modify_cmd, shell=True, capture_output=True, text=True, check=True)
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(f'Error configuring network security for {self.ssid}. Return code: {e.returncode}, error: {e.stderr}') from e
+        _run_nmcli_with_retry(modify_cmd, f'Error configuring network security for {self.ssid}')
 
         # 4. Connect
         connect_cmd = f'nmcli connection up "{self.ssid}"'
         try:
-            connect_result = subprocess.run(connect_cmd, shell=True,
-                                            capture_output=True, text=True,
-                                            check=True)
-        except subprocess.CalledProcessError as e:
+            # We use the helper here too, but we need to capture the connection_id logic from the original code
+            # Actually, for explicit profile creation, the connection ID is just self.ssid.
+            _run_nmcli_with_retry(connect_cmd, f'Error connecting to {self.ssid}')
             self.connection_id = self.ssid
-            raise RuntimeError(f'Error connecting to {self.ssid}. Return code: {e.returncode}, error: {e.stderr}') from e
+            self.connected = True
+        except RuntimeError:
+            raise
 
         # Regular expression pattern to match the string after "activated with"
         pattern = r"activated with '([^']*)'"
